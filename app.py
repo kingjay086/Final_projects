@@ -52,7 +52,7 @@ if st.button("Recommend"):
         if recommendations:
             st.subheader("Top 5 Similar Movies:")
             for movie in recommendations:
-                st.write("👉", movie)
+                st.write(">>", movie)
         else:
             st.error("Movie not found in database.")
     except Exception as e:
