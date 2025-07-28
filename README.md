@@ -52,6 +52,7 @@ Used the **TMDB 5000 Movie Dataset** from Kaggle:
 ```bash
 ├── finalproject.py        # Data cleaning and model training
 ├── app.py                 # Streamlit UI for recommendation
+├── App Link
 ├── movies.pkl(in data)             # Processed movie data (title + tags)
 ├── similarity.pkl(in data)         # Cosine similarity matrix
 ├── requirements.txt       # Dependencies
