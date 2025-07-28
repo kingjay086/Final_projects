@@ -4,41 +4,44 @@ import pickle
 import os
 import requests
 
-def download_file_from_google_drive(url, destination):
+def download_file_from_google_drive(file_id, destination):
     if not os.path.exists(destination):
         st.info(f"Downloading {destination}...")
-        r = requests.get(url, allow_redirects=True)
-        open(destination, 'wb').write(r.content)
+        url = f"https://drive.google.com/uc?export=download&id={file_id}"
+        response = requests.get(url)
+        
+        # Check if the file looks like HTML (probably error page)
+        if b'html' in response.content[:100].lower():
+            st.error(f"Failed to download {destination}. Check Google Drive file permissions.")
+            return
+
+        with open(destination, 'wb') as f:
+            f.write(response.content)
         st.success(f"{destination} downloaded.")
 
-# Google Drive URLs (Replace if needed)
-MOVIES_URL = "https://drive.google.com/uc?export=download&id=1k5pA6DLaYxtxrbgTh55JYbXmmOoWq08J"
-SIMILARITY_URL = "https://drive.google.com/uc?export=download&id=1MT9WvIlogsvzWmmOZmmUeb0qnYEFJljz"
+# GDrive File IDs
+MOVIES_ID = "1-XBg9QTE5tAlKh7CfSj-MYiJoP-ATrmA"
+SIMILARITY_ID = "1OO98hL_OVJwpTIlyh2uIFeB977lsgA43"
 
-# Download models
-download_file_from_google_drive(MOVIES_URL, "movies.pkl")
-download_file_from_google_drive(SIMILARITY_URL, "similarity.pkl")
+# Download files if not already present
+download_file_from_google_drive(MOVIES_ID, "movies.pkl")
+download_file_from_google_drive(SIMILARITY_ID, "similarity.pkl")
 
-# Load data
-movies = pickle.load(open("movies.pkl", "rb"))
-similarity = pickle.load(open("similarity.pkl", "rb"))
+# Load pickled data
+try:
+    movies = pickle.load(open('movies.pkl', 'rb'))
+    similarity = pickle.load(open('similarity.pkl', 'rb'))
+except Exception as e:
+    st.error("Error loading pickle files: " + str(e))
+    st.stop()
 
-# Ensure similarity is NumPy array (not DataFrame)
-if hasattr(similarity, 'values'):
-    similarity = similarity.values
-
-# Recommendation function
 def recommend(movie):
-    try:
-        index = movies[movies['title'] == movie].index[0]
-        distances = similarity[index]
-        movie_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
-        return [movies.iloc[i[0]].title for i in movie_list]
-    except Exception as e:
-        st.error(f"Error in recommendation: {e}")
-        return []
+    index = movies[movies['title'] == movie].index[0]
+    distances = similarity[index]
+    movie_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
+    return [movies.iloc[i[0]].title for i in movie_list]
 
-# UI
+# Streamlit UI
 st.set_page_config(page_title="Movie Recommender", page_icon="🎬")
 st.title("🎬 Movie Recommender System")
 
@@ -49,4 +52,6 @@ if st.button("Recommend"):
     if recommendations:
         st.subheader("Top 5 Similar Movies:")
         for movie in recommendations:
-            st.write("👉", movie)
+            st.write(">>", movie)
+    else:
+        st.error("Movie not found in database.")
