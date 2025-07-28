@@ -20,6 +20,7 @@ download_file_from_google_drive(SIMILARITY_URL, "similarity.pkl")
 
 movies = pickle.load(open('movies.pkl', 'rb'))
 similarity = pickle.load(open('similarity.pkl', 'rb'))
+similarity = similarity.values
 
 def recommend(movie):
     index = movies[movies['title'] == movie].index[0]
