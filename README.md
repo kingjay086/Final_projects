@@ -8,7 +8,6 @@ This project is a **Streamlit web app** that recommends similar movies based on 
 
 - Recommend 5 similar movies based on selected movie
 - Uses TMDB 5000 dataset (`movies` + `credits`)
-- Optional poster support using TMDB API
 - Google Drive fallback for pre-trained model files
 
 ---
@@ -45,7 +44,6 @@ Used the **TMDB 5000 Movie Dataset** from Kaggle:
 - Streamlit
 - gdown (for downloading model files)
 - Pickle (for saving models)
-- (Optional) TMDB API for fetching posters
 
 ---
 
@@ -54,8 +52,8 @@ Used the **TMDB 5000 Movie Dataset** from Kaggle:
 ```bash
 ├── finalproject.py        # Data cleaning and model training
 ├── app.py                 # Streamlit UI for recommendation
-├── movies.pkl             # Processed movie data (title + tags)
-├── similarity.pkl         # Cosine similarity matrix
+├── movies.pkl(in data)             # Processed movie data (title + tags)
+├── similarity.pkl(in data)         # Cosine similarity matrix
 ├── requirements.txt       # Dependencies
 └── README.md              # Project documentation
 ```
