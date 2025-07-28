@@ -11,24 +11,34 @@ def download_file_from_google_drive(url, destination):
         open(destination, 'wb').write(r.content)
         st.success(f"{destination} downloaded.")
 
-#  GDrive links
+# Google Drive URLs (Replace if needed)
 MOVIES_URL = "https://drive.google.com/uc?export=download&id=1k5pA6DLaYxtxrbgTh55JYbXmmOoWq08J"
-SIMILARITY_URL = "https://drive.google.com/uc?export=download&id=1k5pA6DLaYxtxrbgTh55JYbXmmOoWq08J"
+SIMILARITY_URL = "https://drive.google.com/uc?export=download&id=1MT9WvIlogsvzWmmOZmmUeb0qnYEFJljz"
 
+# Download models
 download_file_from_google_drive(MOVIES_URL, "movies.pkl")
 download_file_from_google_drive(SIMILARITY_URL, "similarity.pkl")
 
-movies = pickle.load(open('movies.pkl', 'rb'))
-similarity = pickle.load(open('similarity.pkl', 'rb'))
-similarity = similarity.values
+# Load data
+movies = pickle.load(open("movies.pkl", "rb"))
+similarity = pickle.load(open("similarity.pkl", "rb"))
 
+# Ensure similarity is NumPy array (not DataFrame)
+if hasattr(similarity, 'values'):
+    similarity = similarity.values
+
+# Recommendation function
 def recommend(movie):
-    index = movies[movies['title'] == movie].index[0]
-    distances = similarity[index]
-    movie_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
-    return [movies.iloc[i[0]].title for i in movie_list]
+    try:
+        index = movies[movies['title'] == movie].index[0]
+        distances = similarity[index]
+        movie_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
+        return [movies.iloc[i[0]].title for i in movie_list]
+    except Exception as e:
+        st.error(f"Error in recommendation: {e}")
+        return []
 
-# Streamlit UI
+# UI
 st.set_page_config(page_title="Movie Recommender", page_icon="🎬")
 st.title("🎬 Movie Recommender System")
 
@@ -39,6 +49,4 @@ if st.button("Recommend"):
     if recommendations:
         st.subheader("Top 5 Similar Movies:")
         for movie in recommendations:
-            st.write(">>", movie)
-    else:
-        st.error("Movie not found in database.")
+            st.write("👉", movie)
