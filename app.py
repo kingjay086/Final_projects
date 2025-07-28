@@ -1,44 +1,65 @@
 import streamlit as st
-import pandas as pd
 import pickle
-import os
+import pandas as pd
 import requests
+import os
 import gdown
 
-def download_file_from_google_drive(url, destination):
-    if not os.path.exists(destination):
-        st.info(f"Downloading {destination}...")
-        r = requests.get(url, allow_redirects=True)
-        open(destination, 'wb').write(r.content)
-        st.success(f"{destination} downloaded.")
+# Google Drive file IDs
+MOVIES_FILE_ID = "1k5pA6DLaYxtxrbgTh55JYbXmmOoWq08J"
+SIMILARITY_FILE_ID = "1MT9WvIlogsvzWmmOZmmUeb0qnYEFJljz"
 
-#  GDrive links
-MOVIES_URL = "https://drive.google.com/uc?export=download&id=1k5pA6DLaYxtxrbgTh55JYbXmmOoWq08J"
-SIMILARITY_URL = "https://drive.google.com/uc?export=download&id=1k5pA6DLaYxtxrbgTh55JYbXmmOoWq08J"
+# Download if not already present
+def download_file(file_id, output):
+    if not os.path.exists(output):
+        url = f"https://drive.google.com/uc?id={file_id}"
+        gdown.download(url, output, quiet=False)
 
-download_file_from_google_drive(MOVIES_URL, "movies.pkl")
-download_file_from_google_drive(SIMILARITY_URL, "similarity.pkl")
+download_file(MOVIES_FILE_ID, "movies.pkl")
+download_file(SIMILARITY_FILE_ID, "similarity.pkl")
 
-movies = pickle.load(open('movies.pkl', 'rb'))
-similarity = pickle.load(open('similarity.pkl', 'rb'))
+# Load model/data
+with open('movies.pkl', 'rb') as f:
+    movies = pickle.load(f)
 
+with open('similarity.pkl', 'rb') as f:
+    similarity = pickle.load(f)
+
+# TMDB poster fetch
+def fetch_poster(movie_id):
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=<<d026a6fa836620f6113427cbbb0b0ea7>>&language=en-US"
+    data = requests.get(url)
+    if data.status_code == 200:
+        poster_path = data.json().get('poster_path')
+        if poster_path:
+            return f"https://image.tmdb.org/t/p/w500/{poster_path}"
+    return "https://via.placeholder.com/300x450?text=No+Image"
+
+# Recommend logic
 def recommend(movie):
     index = movies[movies['title'] == movie].index[0]
     distances = similarity[index]
     movie_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
-    return [movies.iloc[i[0]].title for i in movie_list]
+
+    recommended_titles = []
+    recommended_posters = []
+
+    for i in movie_list:
+        movie_id = movies.iloc[i[0]].movie_id
+        recommended_titles.append(movies.iloc[i[0]].title)
+        recommended_posters.append(fetch_poster(movie_id))
+
+    return recommended_titles, recommended_posters
 
 # Streamlit UI
-st.set_page_config(page_title="Movie Recommender", page_icon="🎬")
-st.title("🎬 Movie Recommender System")
+st.title('🎬 Movie Recommendation System')
 
-selected_movie = st.selectbox("Search or select a movie:", movies['title'].values)
+selected_movie = st.selectbox("Choose a movie to get recommendations", movies['title'].values)
 
-if st.button("Recommend"):
-    recommendations = recommend(selected_movie)
-    if recommendations:
-        st.subheader("Top 5 Similar Movies:")
-        for movie in recommendations:
-            st.write(">>", movie)
-    else:
-        st.error("Movie not found in database.")
+if st.button('Recommend'):
+    names, posters = recommend(selected_movie)
+    col1, col2, col3, col4, col5 = st.columns(5)
+    for i, col in enumerate([col1, col2, col3, col4, col5]):
+        with col:
+            st.text(names[i])
+            st.image(posters[i])
