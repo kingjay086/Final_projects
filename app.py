@@ -21,7 +21,7 @@ def download_file_from_google_drive(file_id, destination):
 
 # GDrive File IDs
 MOVIES_ID = "1-XBg9QTE5tAlKh7CfSj-MYiJoP-ATrmA"
-SIMILARITY_ID = "1OO98hL_OVJwpTIlyh2uIFeB977lsgA43"
+SIMILARITY_ID = "1zc_vji9oGoAzGNKFMrnyNj9r_CnfnD7y"
 
 # Download files if not already present
 download_file_from_google_drive(MOVIES_ID, "movies.pkl")
